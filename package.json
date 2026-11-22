@@ -1,0 +1,33 @@
+{
+  "name": "tharnok-game",
+  "version": "0.0.1",
+  "description": "A 3D procedural dungeon crawler roguelike built with WebGL and TypeScript.",
+  "keywords": [
+    "webgl",
+    "typescript",
+    "dungeon-crawler",
+    "roguelike",
+    "game"
+  ],
+  "homepage": "https://github.com/DevR-Hub2410/Tharnok#readme",
+  "bugs": {
+    "url": "https://github.com/DevR-Hub2410/Tharnok/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/DevR-Hub2410/Tharnok.git"
+  },
+  "license": "MIT",
+  "author": "OnionFace",
+  "type": "module",
+  "main": "src/main.ts",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview"
+  },
+  "devDependencies": {
+    "typescript": "^7.0.2",
+    "vite": "^8.3.8"
+  }
+}
