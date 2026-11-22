@@ -1,6 +1,9 @@
+import { GameLoop } from "./GameLoop.js"
+
 export class Game {
     private gl: WebGL2RenderingContext
-    private running: boolean = false
+    
+    private loop: GameLoop
 
     constructor(private canvas: HTMLCanvasElement) {
         const gl = canvas.getContext('webgl2')
@@ -9,27 +12,23 @@ export class Game {
         }
 
         this.gl = gl
+
+        this.loop = new GameLoop(this.tick, this.render)
     }
 
     public start(): void {
-        this.running = true
-        requestAnimationFrame(this.run)
+        this.loop.start()
     }
 
-    private run = (timer: number): void => {
-        if(!this.running) return
-
-        this.tick(timer)
-        this.render()
-
-        requestAnimationFrame(this.run)
+    public stop(): void {
+        this.loop.stop()
     }
 
-    private tick(timer: number): void {
+    private tick = (deltaTime: number): void => {
 
     }
 
-    private render(): void {
+    private render = (): void => {
         const gl = this.gl
         gl.viewport(0, 0, this.canvas.width, this.canvas.height)
         gl.clearColor(0.0, 0.0, 0.0, 1.0)
