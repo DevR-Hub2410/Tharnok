@@ -56,4 +56,18 @@ export class ShaderProgram {
     public dispose(): void {
         this.gl.deleteProgram(this.program)
     }
+
+    public setInt(name: string, value: number): void {
+        const location = this.gl.getUniformLocation(this.program, name)
+        if(location === null) return
+
+        this.gl.uniform1i(location, value)
+    }
+
+    public setBoolean(name: string, value: boolean): void {
+        const location = this.gl.getUniformLocation(this.program, name)
+        if(location === null) return
+        
+        this.gl.uniform1i(location, value ? 1 : 0)
+    }
 }

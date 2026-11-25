@@ -3,6 +3,16 @@ export class Tessellator {
     private vertexCount: number = 0
 
     private drawing: boolean = false
+    
+    private hasColor: boolean = false;
+    private r: number = 1.0
+    private g: number = 1.0
+    private b: number = 1.0
+    private a: number = 1.0
+
+    private hasTexture: boolean = false
+    private u: number = 0.0
+    private v: number = 0.0
 
     private vao: WebGLVertexArrayObject
     private vbo: WebGLBuffer
@@ -23,13 +33,20 @@ export class Tessellator {
 
     private setupBuffers(): void {
         const gl = this.gl
-        const stride = 3 * 4
+        const FLOAT_SIZE = Float32Array.BYTES_PER_ELEMENT
+        const stride = 9 * FLOAT_SIZE
 
         gl.bindVertexArray(this.vao)
         gl.bindBuffer(gl.ARRAY_BUFFER, this.vbo)
 
         gl.enableVertexAttribArray(0)
         gl.vertexAttribPointer(0, 3, gl.FLOAT, false, stride, 0)
+
+        gl.enableVertexAttribArray(1)
+        gl.vertexAttribPointer(1, 4, gl.FLOAT, false, stride, 3 * FLOAT_SIZE)
+
+        gl.enableVertexAttribArray(2)
+        gl.vertexAttribPointer(2, 2, gl.FLOAT, false, stride, 7 * FLOAT_SIZE)
 
         gl.bindVertexArray(null)
         gl.bindBuffer(gl.ARRAY_BUFFER, null)
@@ -43,7 +60,31 @@ export class Tessellator {
         this.vertices = []
         this.vertexCount = 0
 
+        this.hasColor = false
+        this.hasTexture = false
+
         this.drawing = true
+    }
+
+    public color(r: number, g: number, b: number, a: number = 1.0): void {
+        this.r = r
+        this.g = g
+        this.b = b
+        this.a = a
+
+        this.hasColor = true
+    }
+
+    public tex(u: number, v: number): void {
+        this.u = u
+        this.v = v
+
+        this.hasTexture = true
+    }
+
+    public vertexUV(x: number, y: number, z: number, u: number, v: number): void {
+        this.tex(u, v)
+        this.vertex(x, y, z)
     }
 
     public vertex(x: number, y: number, z: number): void {
@@ -51,6 +92,8 @@ export class Tessellator {
             throw new Error("Call begin() before vertex()")
         }
         this.vertices.push(x, y, z)
+        this.vertices.push(this.hasColor ? this.r : 1.0, this.hasColor ? this.g : 1.0, this.hasColor ? this.b : 1.0, this.hasColor ? this.a : 1.0)
+        this.vertices.push(this.hasTexture ? this.u : 0.0, this.hasTexture ? this.v : 0.0)
         this.vertexCount++
     }
 
