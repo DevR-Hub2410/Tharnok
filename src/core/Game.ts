@@ -5,10 +5,18 @@ import { GameLoop } from "./GameLoop.js"
 import vertexSource from "../../shaders/basic.vert?raw"
 import fragmentSource from "../../shaders/basic.frag?raw"
 import { Texture } from "../graphics/Texture.js"
+import { Camera } from "../graphics/Camera.js"
+import { Vector3 } from "../math/Vector3.js"
+import { Matrix4 } from "../math/Matrix4.js"
 
 export class Game {
     private gl: WebGL2RenderingContext
     
+    private camera: Camera
+    private model: Matrix4
+
+    private keys: Record<string, boolean> = {}
+
     private loop: GameLoop
     private t: Tessellator
     private shader: ShaderProgram
@@ -21,8 +29,8 @@ export class Game {
             throw new Error('WebGL 2 is not supported')
         }
 
-        canvas.width = window.innerWidth;
-        canvas.height = window.innerHeight;
+        canvas.width = window.innerWidth
+        canvas.height = window.innerHeight
 
         this.gl = gl
 
@@ -30,6 +38,25 @@ export class Game {
         this.shader = new ShaderProgram(gl, vertexSource, fragmentSource)
         this.t = new Tessellator(gl)
         this.texture = new Texture(gl)
+
+        this.camera = new Camera(new Vector3(0, 0, 3), 70, this.gl.canvas.width / this.gl.canvas.height)
+        this.model = new Matrix4()
+
+        canvas.addEventListener('click', () => {
+            canvas.requestPointerLock()
+        })
+
+        document.addEventListener('mousemove', (e) => {
+            this.camera.rotate(e.movementX, e.movementY)
+        })
+
+        window.addEventListener('keydown', (e) => {
+            this.keys[e.code] = true
+        })
+
+        window.addEventListener('keyup', (e) => {
+            this.keys[e.code] = false
+        })
     }
 
     public async start(): Promise<void> {
@@ -42,7 +69,7 @@ export class Game {
     }
 
     private tick = (deltaTime: number): void => {
-
+        this.updateCamera(deltaTime)
     }
 
     private render = (): void => {
@@ -55,6 +82,10 @@ export class Game {
         if(!this.atlas) return
 
         this.shader.bind()
+        this.shader.setMatrix4('uModel', this.model.elements)
+        this.shader.setMatrix4('uView', this.camera.getViewMatrix().elements)
+        this.shader.setMatrix4('uProjection', this.camera.getProjectionMatrix().elements)
+
         gl.activeTexture(gl.TEXTURE0)
         this.texture.bind(this.atlas)
 
@@ -89,5 +120,36 @@ export class Game {
         const v1 = 1.0 - ((row + 1) * (spriteSize / atlasSize))
 
         return {u0, v0, u1, v1}
+    }
+
+    private updateCamera(deltaTime: number): void {
+        const speed = 5.0 * deltaTime
+        const forward = this.camera.getForward()
+
+        forward.y = 0
+        forward.normalizer()
+
+        const right = new Vector3(-forward.z, 0, forward.x)
+
+        if(this.keys['KeyW']) {
+            this.camera.position.add(forward.clone().multiply(speed))
+        }
+        if(this.keys['KeyS']) {
+            this.camera.position.subtract(forward.clone().multiply(speed))
+        }
+        if(this.keys['KeyA']) {
+            this.camera.position.subtract(right.clone().multiply(speed))
+        }
+        if(this.keys['KeyD']) {
+            this.camera.position.add(right.clone().multiply(speed))
+        }
+        if(this.keys['Space']) {
+            this.camera.position.y += speed
+        }
+        if(this.keys['ShiftLeft']) {
+            this.camera.position.y -= speed
+        }
+
+        this.camera.updateView()
     }
 }

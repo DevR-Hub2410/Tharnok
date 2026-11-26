@@ -70,4 +70,11 @@ export class ShaderProgram {
         
         this.gl.uniform1i(location, value ? 1 : 0)
     }
+
+    public setMatrix4(name: string, matrix: Float32Array): void {
+        const location = this.gl.getUniformLocation(this.program, name)
+        if(location === null) return
+
+        this.gl.uniformMatrix4fv(location, false, matrix)
+    }
 }
