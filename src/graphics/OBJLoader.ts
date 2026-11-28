@@ -104,7 +104,7 @@ export class OBJLoader {
                 }
             }
         }
-
+        model.calculateBounds()
         return model
     }
 

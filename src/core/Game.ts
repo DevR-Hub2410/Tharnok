@@ -8,9 +8,11 @@ import { Texture } from "../graphics/Texture.js"
 import { Camera } from "../graphics/Camera.js"
 import { Vector3 } from "../math/Vector3.js"
 import { Matrix4 } from "../math/Matrix4.js"
-import { Cube } from "../graphics/Cube.js"
 import type { Model } from "../graphics/Model.js"
 import { OBJLoader } from "../graphics/OBJLoader.js"
+import { WallTile } from "../dungeon/tile/WallTile.js"
+import { Dungeon } from "../dungeon/Dungeon.js"
+import { DungeonRenderer } from "../dungeon/DungeonRenderer.js"
 
 export class Game {
     private gl: WebGL2RenderingContext
@@ -26,8 +28,10 @@ export class Game {
     private texture: Texture
     private atlas: WebGLTexture | null = null
 
-    private cube: Model | null = null
-    private wall: WebGLTexture | null = null
+    private dungeon!: Dungeon
+    private dungeonRenderer!: DungeonRenderer
+    private wallModel: Model | null = null
+    private wallTexture: WebGLTexture | null = null
 
     constructor(private canvas: HTMLCanvasElement) {
         const gl = canvas.getContext('webgl2')
@@ -39,6 +43,10 @@ export class Game {
         canvas.height = window.innerHeight
 
         gl.enable(gl.DEPTH_TEST)
+
+        gl.enable(gl.CULL_FACE)
+        gl.cullFace(gl.BACK)
+        gl.frontFace(gl.CCW)
 
         this.gl = gl
 
@@ -65,12 +73,17 @@ export class Game {
         window.addEventListener('keyup', (e) => {
             this.keys[e.code] = false
         })
+
+        this.dungeon = new Dungeon(10, 1, 10)
+        this.dungeonRenderer = new DungeonRenderer(this.gl, this.dungeon, this.t, this.shader)
     }
 
     public async start(): Promise<void> {
         this.atlas = await this.texture.loadTexture(`${import.meta.env.BASE_URL}textures/gui.png`)
-        this.cube = await OBJLoader.load(`${import.meta.env.BASE_URL}models/wall.obj`)
-        this.wall = await this.texture.loadTexture(`${import.meta.env.BASE_URL}textures/wall.png`)
+        this.wallModel = await OBJLoader.load(`${import.meta.env.BASE_URL}models/wall.obj`)
+        this.wallTexture = await this.texture.loadTexture(`${import.meta.env.BASE_URL}textures/wall.png`)
+        new WallTile(this.wallModel!, this.wallTexture!)
+        this.dungeon.generate()
         this.loop.start()
     }
 
@@ -85,6 +98,7 @@ export class Game {
     private render = (): void => {
         const gl = this.gl
         const t = this.t
+
         gl.viewport(0, 0, this.canvas.width, this.canvas.height)
         gl.clearColor(0.0, 0.0, 0.0, 1.0)
         gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
@@ -99,15 +113,7 @@ export class Game {
         // gl.activeTexture(gl.TEXTURE0)
         // this.texture.bind(this.atlas)
 
-        if(this.cube && this.wall) {
-            gl.activeTexture(gl.TEXTURE0)
-            gl.bindTexture(gl.TEXTURE_2D, this.wall)
-
-            this.shader.setInt('uTexture', 0)
-            this.shader.setBoolean('useTexture', true)
-
-            this.cube.render(t)
-        }
+        this.dungeonRenderer.render()
 
         /* const {u0, v0, u1, v1} = this.getSpriteUV(0, 0)
 

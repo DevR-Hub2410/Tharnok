@@ -19,8 +19,6 @@ export class Matrix4 {
     }
 
     public setTranslation(x: number, y: number, z: number): this {
-        this.identity()
-
         this.elements[12] = x
         this.elements[13] = y
         this.elements[14] = z
@@ -55,7 +53,7 @@ export class Matrix4 {
     public setRotationY(angle: number): this {
         const c = Math.cos(angle)
         const s = Math.sin(angle)
-
+        
         this.identity()
 
         this.elements[0] = c
@@ -124,5 +122,15 @@ export class Matrix4 {
         matrix.elements.set(this.elements)
 
         return matrix
+    }
+
+    public rotateY(angle: number): this {
+        const rot = new Matrix4().setRotationY(angle)
+        return this.multiply(rot)
+    }
+
+    public translate(x: number, y: number, z: number): this {
+        const trans = new Matrix4().setTranslation(x, y, z)
+        return this.multiply(trans)
     }
 }
