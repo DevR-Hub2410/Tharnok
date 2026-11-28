@@ -34,7 +34,7 @@ export class Tessellator {
     private setupBuffers(): void {
         const gl = this.gl
         const FLOAT_SIZE = Float32Array.BYTES_PER_ELEMENT
-        const stride = 9 * FLOAT_SIZE
+        const stride = 12 * FLOAT_SIZE
 
         gl.bindVertexArray(this.vao)
         gl.bindBuffer(gl.ARRAY_BUFFER, this.vbo)
@@ -47,6 +47,9 @@ export class Tessellator {
 
         gl.enableVertexAttribArray(2)
         gl.vertexAttribPointer(2, 2, gl.FLOAT, false, stride, 7 * FLOAT_SIZE)
+
+        gl.enableVertexAttribArray(3)
+        gl.vertexAttribPointer(3, 3, gl.FLOAT, false, stride, 9 * FLOAT_SIZE)
 
         gl.bindVertexArray(null)
         gl.bindBuffer(gl.ARRAY_BUFFER, null)
@@ -82,18 +85,19 @@ export class Tessellator {
         this.hasTexture = true
     }
 
-    public vertexUV(x: number, y: number, z: number, u: number, v: number): void {
+    public vertexUV(x: number, y: number, z: number, nx: number, ny: number, nz: number, u: number, v: number): void {
         this.tex(u, v)
-        this.vertex(x, y, z)
+        this.vertex(x, y, z, nx, ny, nz)
     }
 
-    public vertex(x: number, y: number, z: number): void {
+    public vertex(x: number, y: number, z: number, nx: number, ny: number, nz: number): void {
         if(!this.drawing) {
             throw new Error("Call begin() before vertex()")
         }
         this.vertices.push(x, y, z)
         this.vertices.push(this.hasColor ? this.r : 1.0, this.hasColor ? this.g : 1.0, this.hasColor ? this.b : 1.0, this.hasColor ? this.a : 1.0)
         this.vertices.push(this.hasTexture ? this.u : 0.0, this.hasTexture ? this.v : 0.0)
+        this.vertices.push(nx, ny, nz)
         this.vertexCount++
     }
 

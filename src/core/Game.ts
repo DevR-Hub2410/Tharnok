@@ -8,6 +8,9 @@ import { Texture } from "../graphics/Texture.js"
 import { Camera } from "../graphics/Camera.js"
 import { Vector3 } from "../math/Vector3.js"
 import { Matrix4 } from "../math/Matrix4.js"
+import { Cube } from "../graphics/Cube.js"
+import type { Model } from "../graphics/Model.js"
+import { OBJLoader } from "../graphics/OBJLoader.js"
 
 export class Game {
     private gl: WebGL2RenderingContext
@@ -23,6 +26,9 @@ export class Game {
     private texture: Texture
     private atlas: WebGLTexture | null = null
 
+    private cube: Model | null = null
+    private wall: WebGLTexture | null = null
+
     constructor(private canvas: HTMLCanvasElement) {
         const gl = canvas.getContext('webgl2')
         if(!gl) {
@@ -31,6 +37,8 @@ export class Game {
 
         canvas.width = window.innerWidth
         canvas.height = window.innerHeight
+
+        gl.enable(gl.DEPTH_TEST)
 
         this.gl = gl
 
@@ -61,6 +69,8 @@ export class Game {
 
     public async start(): Promise<void> {
         this.atlas = await this.texture.loadTexture(`${import.meta.env.BASE_URL}textures/gui.png`)
+        this.cube = await OBJLoader.load(`${import.meta.env.BASE_URL}models/wall.obj`)
+        this.wall = await this.texture.loadTexture(`${import.meta.env.BASE_URL}textures/wall.png`)
         this.loop.start()
     }
 
@@ -86,26 +96,22 @@ export class Game {
         this.shader.setMatrix4('uView', this.camera.getViewMatrix().elements)
         this.shader.setMatrix4('uProjection', this.camera.getProjectionMatrix().elements)
 
-        gl.activeTexture(gl.TEXTURE0)
-        this.texture.bind(this.atlas)
+        // gl.activeTexture(gl.TEXTURE0)
+        // this.texture.bind(this.atlas)
 
-        this.shader.setInt('uTexture', 0)
-        this.shader.setBoolean('useTexture', true)
+        if(this.cube && this.wall) {
+            gl.activeTexture(gl.TEXTURE0)
+            gl.bindTexture(gl.TEXTURE_2D, this.wall)
 
-        const {u0, v0, u1, v1} = this.getSpriteUV(0, 0)
+            this.shader.setInt('uTexture', 0)
+            this.shader.setBoolean('useTexture', true)
 
-        t.begin()
+            this.cube.render(t)
+        }
 
-        t.color(1.0, 1.0, 1.0)
-        t.vertexUV(-0.5, -0.5, 0.0, u0, v1)
-        t.vertexUV(0.5, -0.5, 0.0, u1, v1)
-        t.vertexUV(0.5, 0.5, 0.0, u1, v0)
-        
-        t.vertexUV(-0.5, -0.5, 0.0, u0, v1)
-        t.vertexUV(0.5, 0.5, 0.0, u1, v0)
-        t.vertexUV(-0.5, 0.5, 0.0, u0, v0)
+        /* const {u0, v0, u1, v1} = this.getSpriteUV(0, 0)
 
-        t.end()
+        Cube.render(t, u0, v0, u1, v1) */
 
         this.shader.unbind()
     }
