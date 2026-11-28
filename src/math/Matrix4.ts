@@ -133,4 +133,19 @@ export class Matrix4 {
         const trans = new Matrix4().setTranslation(x, y, z)
         return this.multiply(trans)
     }
+
+    public static orthographic(left: number, right: number, bottom: number, top: number, near: number, far: number): Matrix4 {
+        const matrix = new Matrix4()
+        const e = matrix.elements
+
+        e[0] = 2 / (right - left)
+        e[5] = 2 / (top - bottom)
+        e[10] = -2 / (far - near)
+
+        e[12] = -(right + left) / (right - left)
+        e[13] = -(top + bottom) / (top - bottom)
+        e[14] = -(far + near) / (far - near)
+
+        return matrix
+    }
 }
